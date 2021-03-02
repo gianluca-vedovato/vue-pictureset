@@ -1,26 +1,18 @@
-import PictureSet from './PictureSet.vue'
+import PictureSetContentful from "./PictureSetContentful.vue"
+// import PictureSetStoryblok from "./PictureSetStoryblok.vue"
 
-function install(Vue) {
-  if (install.installed) return;
-  install.installed = true;
-  Vue.component("picture-set", PictureSet);
+const PictureSetInstall = {
+ install(Vue, options = { imagesApi: 'contentful' }) {
+  const imagesApi = {
+    contentful: PictureSetContentful
+    // storyblok: PictureSetStoryblok
+  }
+  Vue.component("picture-set", imagesApi[options.imagesApi])
+ }
 }
 
-const plugin = {
-  install
-};
-
-let GlobalVue = null;
-if (typeof window !== "undefined") {
-  GlobalVue = window.Vue;
-} else if (typeof global !== "undefined") {
-  GlobalVue = global.vue;
+if (typeof window !== 'undefined' && window.Vue) {
+    window.Vue.use(PictureSetInstall)
 }
 
-if (GlobalVue) {
-  GlobalVue.use(plugin);
-}
-
-PictureSet.install = install;
-
-export default PictureSet;
+export default PictureSetInstall

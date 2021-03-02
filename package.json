@@ -1,38 +1,28 @@
 {
   "name": "vue-pictureset",
-  "version": "0.1.0",
-  "main": "dist/vue-pictureset.umd.js",
-  "module": "dist/vue-pictureset.esm.js",
-  "unpkg": "dist/vue-pictureset.min.js",
-  "browser": {
-    "./sfc": "src/vue-pictureset.vue"
-  },
+  "version": "0.0.2",
+  "private": false,
+  "main": ".dist/vue-pictureset.common.js",
   "files": [
-    "dist/*",
-    "src/*",
-    "attributes.json",
-    "tags.json"
+    "dist/*"
   ],
-  "vetur": {
-    "tags": "tags.json",
-    "attributes": "attributes.json"
-  },
   "scripts": {
-    "build": "npm run build:unpkg & npm run build:es & npm run build:umd",
-    "build:umd": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format umd --file dist/vue-pictureset.umd.js",
-    "build:es": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format es --file dist/vue-pictureset.esm.js",
-    "build:unpkg": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format iife --file dist/vue-pictureset.min.js"
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "build-library": "vue-cli-service build --target lib --name vue-pictureset ./src/index.js"
+  },
+  "dependencies": {
+    "core-js": "^3.6.5",
+    "vue": "^2.6.11"
   },
   "devDependencies": {
-    "cross-env": "^5.2.0",
-    "minimist": "^1.2.0",
-    "rollup": "^1.14.4",
-    "rollup-plugin-buble": "^0.19.6",
-    "rollup-plugin-commonjs": "^9.3.4",
-    "rollup-plugin-replace": "^2.2.0",
-    "rollup-plugin-uglify-es": "0.0.1",
-    "rollup-plugin-vue": "^4.7.2",
-    "vue": "^2.6.10",
-    "vue-template-compiler": "^2.6.10"
-  }
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
 }
