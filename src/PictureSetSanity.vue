@@ -125,12 +125,12 @@ export default {
               return [
                 {
                   src: densityWebp,
-                  media: item.media,
+                  media,
                   type: 'image/webp'
                 },
                 {
                   src: densityJpg,
-                  media: item.media,
+                  media,
                   type: 'image/' + ext
                 }
               ]
