@@ -169,6 +169,53 @@ exports.f = DESCRIPTORS ? nativeGetOwnPropertyDescriptor : function getOwnProper
 
 /***/ }),
 
+/***/ "0cb2":
+/***/ (function(module, exports, __webpack_require__) {
+
+var toObject = __webpack_require__("7b0b");
+
+var floor = Math.floor;
+var replace = ''.replace;
+var SUBSTITUTION_SYMBOLS = /\$([$&'`]|\d\d?|<[^>]*>)/g;
+var SUBSTITUTION_SYMBOLS_NO_NAMED = /\$([$&'`]|\d\d?)/g;
+
+// https://tc39.es/ecma262/#sec-getsubstitution
+module.exports = function (matched, str, position, captures, namedCaptures, replacement) {
+  var tailPos = position + matched.length;
+  var m = captures.length;
+  var symbols = SUBSTITUTION_SYMBOLS_NO_NAMED;
+  if (namedCaptures !== undefined) {
+    namedCaptures = toObject(namedCaptures);
+    symbols = SUBSTITUTION_SYMBOLS;
+  }
+  return replace.call(replacement, symbols, function (match, ch) {
+    var capture;
+    switch (ch.charAt(0)) {
+      case '$': return '$';
+      case '&': return matched;
+      case '`': return str.slice(0, position);
+      case "'": return str.slice(tailPos);
+      case '<':
+        capture = namedCaptures[ch.slice(1, -1)];
+        break;
+      default: // \d\d?
+        var n = +ch;
+        if (n === 0) return match;
+        if (n > m) {
+          var f = floor(n / 10);
+          if (f === 0) return match;
+          if (f <= m) return captures[f - 1] === undefined ? ch.charAt(1) : captures[f - 1] + ch.charAt(1);
+          return match;
+        }
+        capture = captures[n - 1];
+    }
+    return capture === undefined ? '' : capture;
+  });
+};
+
+
+/***/ }),
+
 /***/ "0cfb":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -963,6 +1010,112 @@ var hasOwnProperty = {}.hasOwnProperty;
 module.exports = function (it, key) {
   return hasOwnProperty.call(it, key);
 };
+
+
+/***/ }),
+
+/***/ "5319":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var fixRegExpWellKnownSymbolLogic = __webpack_require__("d784");
+var anObject = __webpack_require__("825a");
+var toLength = __webpack_require__("50c4");
+var toInteger = __webpack_require__("a691");
+var requireObjectCoercible = __webpack_require__("1d80");
+var advanceStringIndex = __webpack_require__("8aa5");
+var getSubstitution = __webpack_require__("0cb2");
+var regExpExec = __webpack_require__("14c3");
+
+var max = Math.max;
+var min = Math.min;
+
+var maybeToString = function (it) {
+  return it === undefined ? it : String(it);
+};
+
+// @@replace logic
+fixRegExpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, maybeCallNative, reason) {
+  var REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE = reason.REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE;
+  var REPLACE_KEEPS_$0 = reason.REPLACE_KEEPS_$0;
+  var UNSAFE_SUBSTITUTE = REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE ? '$' : '$0';
+
+  return [
+    // `String.prototype.replace` method
+    // https://tc39.es/ecma262/#sec-string.prototype.replace
+    function replace(searchValue, replaceValue) {
+      var O = requireObjectCoercible(this);
+      var replacer = searchValue == undefined ? undefined : searchValue[REPLACE];
+      return replacer !== undefined
+        ? replacer.call(searchValue, O, replaceValue)
+        : nativeReplace.call(String(O), searchValue, replaceValue);
+    },
+    // `RegExp.prototype[@@replace]` method
+    // https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
+    function (regexp, replaceValue) {
+      if (
+        (!REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE && REPLACE_KEEPS_$0) ||
+        (typeof replaceValue === 'string' && replaceValue.indexOf(UNSAFE_SUBSTITUTE) === -1)
+      ) {
+        var res = maybeCallNative(nativeReplace, regexp, this, replaceValue);
+        if (res.done) return res.value;
+      }
+
+      var rx = anObject(regexp);
+      var S = String(this);
+
+      var functionalReplace = typeof replaceValue === 'function';
+      if (!functionalReplace) replaceValue = String(replaceValue);
+
+      var global = rx.global;
+      if (global) {
+        var fullUnicode = rx.unicode;
+        rx.lastIndex = 0;
+      }
+      var results = [];
+      while (true) {
+        var result = regExpExec(rx, S);
+        if (result === null) break;
+
+        results.push(result);
+        if (!global) break;
+
+        var matchStr = String(result[0]);
+        if (matchStr === '') rx.lastIndex = advanceStringIndex(S, toLength(rx.lastIndex), fullUnicode);
+      }
+
+      var accumulatedResult = '';
+      var nextSourcePosition = 0;
+      for (var i = 0; i < results.length; i++) {
+        result = results[i];
+
+        var matched = String(result[0]);
+        var position = max(min(toInteger(result.index), S.length), 0);
+        var captures = [];
+        // NOTE: This is equivalent to
+        //   captures = result.slice(1).map(maybeToString)
+        // but for some reason `nativeSlice.call(result, 1, result.length)` (called in
+        // the slice polyfill when slicing native arrays) "doesn't work" in safari 9 and
+        // causes a crash (https://pastebin.com/N21QzeQA) when trying to debug it.
+        for (var j = 1; j < result.length; j++) captures.push(maybeToString(result[j]));
+        var namedCaptures = result.groups;
+        if (functionalReplace) {
+          var replacerArgs = [matched].concat(captures, position, S);
+          if (namedCaptures !== undefined) replacerArgs.push(namedCaptures);
+          var replacement = String(replaceValue.apply(undefined, replacerArgs));
+        } else {
+          replacement = getSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
+        }
+        if (position >= nextSourcePosition) {
+          accumulatedResult += S.slice(nextSourcePosition, position) + replacement;
+          nextSourcePosition = position + matched.length;
+        }
+      }
+      return accumulatedResult + S.slice(nextSourcePosition);
+    }
+  ];
+});
 
 
 /***/ }),
@@ -3188,7 +3341,7 @@ if (typeof window !== 'undefined') {
 // Indicate to webpack that this file can be concatenated
 /* harmony default export */ var setPublicPath = (null);
 
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"755899fc-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetContentful.vue?vue&type=template&id=646990bb&
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"04e7651c-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetContentful.vue?vue&type=template&id=646990bb&
 var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('picture',[_vm._l((_vm.srcset),function(source,index){return _c('source',{key:index,attrs:{"srcset":source.src,"media":("(min-width: " + (source.media) + "px)"),"type":source.type}})}),_c('img',{class:_vm.imgClass,style:(_vm.imgStyle),attrs:{"src":_vm.src + '?q=5',"alt":_vm.alt,"title":_vm.title,"loading":_vm.loading},on:{"load":_vm.loaded}})],2)}
 var staticRenderFns = []
 
@@ -3524,8 +3677,411 @@ var component = normalizeComponent(
 )
 
 /* harmony default export */ var PictureSetContentful = (component.exports);
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"04e7651c-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetStoryblok.vue?vue&type=template&id=38f7069c&
+var PictureSetStoryblokvue_type_template_id_38f7069c_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('picture',[_vm._l((_vm.srcset),function(source,index){return _c('source',{key:index,attrs:{"srcset":source.src,"media":("(min-width: " + (source.media) + "px)"),"type":source.type}})}),_c('img',{class:_vm.imgClass,style:(_vm.imgStyle),attrs:{"src":_vm.src + '?q=5',"alt":_vm.alt,"title":_vm.title,"loading":_vm.loading},on:{"load":_vm.loaded}})],2)}
+var PictureSetStoryblokvue_type_template_id_38f7069c_staticRenderFns = []
+
+
+// CONCATENATED MODULE: ./src/PictureSetStoryblok.vue?vue&type=template&id=38f7069c&
+
+// EXTERNAL MODULE: ./node_modules/core-js/modules/es.string.replace.js
+var es_string_replace = __webpack_require__("5319");
+
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js??ref--12-0!./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetStoryblok.vue?vue&type=script&lang=js&
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ var PictureSetStoryblokvue_type_script_lang_js_ = ({
+  props: {
+    src: {
+      type: String,
+      required: true
+    },
+    alt: {
+      type: String,
+      default: function _default() {
+        return '';
+      }
+    },
+    title: {
+      type: String,
+      default: function _default() {
+        return '';
+      }
+    },
+    size: {
+      type: Array | Number,
+      required: true
+    },
+    fit: {
+      type: String,
+      default: function _default() {
+        return 'fill';
+      },
+      validator: function validator(value) {
+        return ['pad', 'fill', 'scale', 'crop', 'thumb'];
+      }
+    },
+    mediaQueries: {
+      type: Array,
+      default: function _default() {
+        return [1980, 1536, 1280, 1024, 768, 640];
+      }
+    },
+    quality: {
+      type: Object | Number,
+      default: {
+        webp: 75,
+        default: 80
+      }
+    },
+    imgStyle: {
+      type: Object,
+      default: function _default(value) {}
+    },
+    imgClass: {
+      type: String,
+      default: function _default() {
+        return '';
+      }
+    },
+    loading: {
+      type: String,
+      default: function _default() {
+        return 'lazy';
+      },
+      validator: function validator(value) {
+        return ['lazy', 'eager', 'auto'];
+      }
+    }
+  },
+  computed: {
+    srcset: {
+      get: function get() {
+        var _this = this;
+
+        var imageService = '//img2.storyblok.com/';
+        var path = this.src.replace('//a.storyblok.com', '');
+
+        if (Array.isArray(this.size)) {
+          var ext = this.src.split('.').pop();
+          return this.size.map(function (item) {
+            var hasHeight = Object.keys(item.attr).indexOf('h') > -1;
+            var densityJpg = Array.from(Array(2).keys()).map(function (i) {
+              var attrs = Object.keys(item.attr).map(function (attr) {
+                if (attr === 'w' || attr === 'h') return "".concat(attr, "=").concat(item.attr[attr] * (i + 1) > 2048 ? 2048 : parseInt(item.attr[attr] * 0.75) * (i + 1));
+                return "".concat(attr, "=").concat(item.attr[attr]);
+              }).join('&');
+              return "".concat(_this.src, "?").concat(attrs, "&fm=").concat(ext, "&q=").concat(quality.default, " ").concat(i + 1, "x");
+            }).join(', ');
+            var densityWebp = Array.from(Array(2).keys()).map(function (i) {
+              var attrs = Object.keys(item.attr).map(function (attr) {
+                if (attr === 'w' || attr === 'h') return "".concat(attr, "=").concat(item.attr[attr] * (i + 1) > 2048 ? 2048 : parseInt(item.attr[attr] * 0.75) * (i + 1));
+                return "".concat(attr, "=").concat(item.attr[attr]);
+              }).join('&');
+              return "".concat(_this.src, "?").concat(attrs, "&fm=webp&q=").concat(quality.webp, " ").concat(i + 1, "x");
+            }).join(', ');
+            return [{
+              src: densityWebp,
+              media: item.media,
+              type: 'image/webp'
+            }, {
+              src: densityJpg,
+              media: item.media,
+              type: 'image/' + ext
+            }];
+          }).reduce(function (a, b) {
+            return a.concat(b);
+          }, []);
+        }
+
+        if (typeof this.size === 'number') {
+          var _ext = this.src.split('.').pop();
+
+          return this.mediaQueries.map(function (media, i) {
+            var w = i !== 0 ? _this.size * _this.mediaQueries[i - 1] : _this.size * media;
+            var densityJpg = Array.from(Array(2).keys()).map(function (i) {
+              return "".concat(_this.src, "?w=").concat(w, "&fit=").concat(_this.fit, "&fm=").concat(_ext, "&q=").concat(quality.default, " ").concat(i + 1, "x");
+            }).join(', ');
+            var densityWebp = Array.from(Array(2).keys()).map(function (i) {
+              return "".concat(_this.src, "?w=").concat(w, "&fit=").concat(_this.fit, "&fm=webp&q=").concat(quality.webp, " ").concat(i + 1, "x");
+            }).join(', ');
+            return [{
+              src: densityWebp,
+              media: item.media,
+              type: 'image/webp'
+            }, {
+              src: densityJpg,
+              media: item.media,
+              type: 'image/' + _ext
+            }];
+          }).reduce(function (a, b) {
+            return a.concat(b);
+          }, []);
+        }
+      }
+    }
+  },
+  methods: {
+    loaded: function loaded() {
+      this.$emit('loaded');
+    }
+  }
+});
+// CONCATENATED MODULE: ./src/PictureSetStoryblok.vue?vue&type=script&lang=js&
+ /* harmony default export */ var src_PictureSetStoryblokvue_type_script_lang_js_ = (PictureSetStoryblokvue_type_script_lang_js_); 
+// CONCATENATED MODULE: ./src/PictureSetStoryblok.vue
+
+
+
+
+
+/* normalize component */
+
+var PictureSetStoryblok_component = normalizeComponent(
+  src_PictureSetStoryblokvue_type_script_lang_js_,
+  PictureSetStoryblokvue_type_template_id_38f7069c_render,
+  PictureSetStoryblokvue_type_template_id_38f7069c_staticRenderFns,
+  false,
+  null,
+  null,
+  null
+  
+)
+
+/* harmony default export */ var PictureSetStoryblok = (PictureSetStoryblok_component.exports);
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"04e7651c-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetSanity.vue?vue&type=template&id=52c4c1b6&
+var PictureSetSanityvue_type_template_id_52c4c1b6_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('picture',[_vm._l((_vm.srcset),function(source,index){return _c('source',{key:index,attrs:{"srcset":source.src,"media":("(min-width: " + (source.media) + "px)"),"type":source.type}})}),_c('img',{class:_vm.imgClass,style:(_vm.imgStyle),attrs:{"src":_vm.src + '?q=5',"alt":_vm.alt,"title":_vm.title,"loading":_vm.loading},on:{"load":_vm.loaded}})],2)}
+var PictureSetSanityvue_type_template_id_52c4c1b6_staticRenderFns = []
+
+
+// CONCATENATED MODULE: ./src/PictureSetSanity.vue?vue&type=template&id=52c4c1b6&
+
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js??ref--12-0!./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetSanity.vue?vue&type=script&lang=js&
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ var PictureSetSanityvue_type_script_lang_js_ = ({
+  props: {
+    src: {
+      type: String,
+      required: true
+    },
+    alt: {
+      type: String,
+      default: function _default() {
+        return '';
+      }
+    },
+    title: {
+      type: String,
+      default: function _default() {
+        return '';
+      }
+    },
+    size: {
+      type: Array | Number,
+      required: true
+    },
+    fit: {
+      type: String,
+      default: function _default() {
+        return 'fill';
+      },
+      validator: function validator(value) {
+        return ['pad', 'fill', 'scale', 'crop', 'thumb'];
+      }
+    },
+    mediaQueries: {
+      type: Array,
+      default: function _default() {
+        return [1980, 1536, 1280, 1024, 768, 640];
+      }
+    },
+    quality: {
+      type: Object | Number,
+      default: {
+        webp: 75,
+        default: 80
+      }
+    },
+    imgStyle: {
+      type: Object,
+      default: function _default(value) {}
+    },
+    imgClass: {
+      type: String,
+      default: function _default() {
+        return '';
+      }
+    },
+    loading: {
+      type: String,
+      default: function _default() {
+        return 'lazy';
+      },
+      validator: function validator(value) {
+        return ['lazy', 'eager', 'auto'];
+      }
+    }
+  },
+  computed: {
+    srcset: {
+      get: function get() {
+        var _this = this;
+
+        if (Array.isArray(this.size)) {
+          var ext = this.src.split('.').pop();
+          return this.size.map(function (item) {
+            var densityJpg = Array.from(Array(2).keys()).map(function (i) {
+              var attrs = Object.keys(item.attr).map(function (attr) {
+                if (attr === 'w' || attr === 'h') return "".concat(attr, "=").concat(item.attr[attr] * (i + 1) > 2048 ? 2048 : parseInt(item.attr[attr] * 0.75) * (i + 1));
+                return "".concat(attr, "=").concat(item.attr[attr]);
+              }).join('&');
+              return "".concat(_this.src, "?").concat(attrs, "&fm=").concat(ext, "&q=").concat(quality.default, " ").concat(i + 1, "x");
+            }).join(', ');
+            var densityWebp = Array.from(Array(2).keys()).map(function (i) {
+              var attrs = Object.keys(item.attr).map(function (attr) {
+                if (attr === 'w' || attr === 'h') return "".concat(attr, "=").concat(item.attr[attr] * (i + 1) > 2048 ? 2048 : parseInt(item.attr[attr] * 0.75) * (i + 1));
+                return "".concat(attr, "=").concat(item.attr[attr]);
+              }).join('&');
+              return "".concat(_this.src, "?").concat(attrs, "&fm=webp&q=").concat(quality.webp, " ").concat(i + 1, "x");
+            }).join(', ');
+            return [{
+              src: densityWebp,
+              media: item.media,
+              type: 'image/webp'
+            }, {
+              src: densityJpg,
+              media: item.media,
+              type: 'image/' + ext
+            }];
+          }).reduce(function (a, b) {
+            return a.concat(b);
+          }, []);
+        }
+
+        if (typeof this.size === 'number') {
+          var _ext = this.src.split('.').pop();
+
+          return this.mediaQueries.map(function (media, i) {
+            var w = i !== 0 ? _this.size * _this.mediaQueries[i - 1] : _this.size * media;
+            var densityJpg = Array.from(Array(2).keys()).map(function (i) {
+              return "".concat(_this.src, "?w=").concat(w, "&fit=").concat(_this.fit, "&fm=").concat(_ext, "&q=").concat(quality.default, " ").concat(i + 1, "x");
+            }).join(', ');
+            var densityWebp = Array.from(Array(2).keys()).map(function (i) {
+              return "".concat(_this.src, "?w=").concat(w, "&fit=").concat(_this.fit, "&fm=webp&q=").concat(quality.webp, " ").concat(i + 1, "x");
+            }).join(', ');
+            return [{
+              src: densityWebp,
+              media: item.media,
+              type: 'image/webp'
+            }, {
+              src: densityJpg,
+              media: item.media,
+              type: 'image/' + _ext
+            }];
+          }).reduce(function (a, b) {
+            return a.concat(b);
+          }, []);
+        }
+      }
+    }
+  },
+  methods: {
+    loaded: function loaded() {
+      this.$emit('loaded');
+    }
+  }
+});
+// CONCATENATED MODULE: ./src/PictureSetSanity.vue?vue&type=script&lang=js&
+ /* harmony default export */ var src_PictureSetSanityvue_type_script_lang_js_ = (PictureSetSanityvue_type_script_lang_js_); 
+// CONCATENATED MODULE: ./src/PictureSetSanity.vue
+
+
+
+
+
+/* normalize component */
+
+var PictureSetSanity_component = normalizeComponent(
+  src_PictureSetSanityvue_type_script_lang_js_,
+  PictureSetSanityvue_type_template_id_52c4c1b6_render,
+  PictureSetSanityvue_type_template_id_52c4c1b6_staticRenderFns,
+  false,
+  null,
+  null,
+  null
+  
+)
+
+/* harmony default export */ var PictureSetSanity = (PictureSetSanity_component.exports);
 // CONCATENATED MODULE: ./src/index.js
- // import PictureSetStoryblok from "./PictureSetStoryblok.vue"
+
+
 
 var PictureSetInstall = {
   install: function install(Vue) {
@@ -3534,7 +4090,8 @@ var PictureSetInstall = {
     };
     var imagesApi = {
       contentful: PictureSetContentful,
-      storyblok: PictureSetStoryblok
+      storyblok: PictureSetStoryblok,
+      sanity: PictureSetSanity
     };
     Vue.component("picture-set", imagesApi[options.imagesApi]);
   }
