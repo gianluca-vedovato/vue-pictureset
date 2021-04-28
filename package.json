@@ -2,7 +2,7 @@
   "name": "vue-pictureset",
   "version": "0.0.7",
   "private": false,
-  "main": ".dist/vue-pictureset.common.js",
+  "main": "./dist/vue-pictureset.common.js",
   "files": [
     "dist/*"
   ],
