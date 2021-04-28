@@ -3341,7 +3341,7 @@ if (typeof window !== 'undefined') {
 // Indicate to webpack that this file can be concatenated
 /* harmony default export */ var setPublicPath = (null);
 
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"04e7651c-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetContentful.vue?vue&type=template&id=646990bb&
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"2a9b5f7e-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetContentful.vue?vue&type=template&id=646990bb&
 var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('picture',[_vm._l((_vm.srcset),function(source,index){return _c('source',{key:index,attrs:{"srcset":source.src,"media":("(min-width: " + (source.media) + "px)"),"type":source.type}})}),_c('img',{class:_vm.imgClass,style:(_vm.imgStyle),attrs:{"src":_vm.src + '?q=5',"alt":_vm.alt,"title":_vm.title,"loading":_vm.loading},on:{"load":_vm.loaded}})],2)}
 var staticRenderFns = []
 
@@ -3677,7 +3677,7 @@ var component = normalizeComponent(
 )
 
 /* harmony default export */ var PictureSetContentful = (component.exports);
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"04e7651c-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetStoryblok.vue?vue&type=template&id=38f7069c&
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"2a9b5f7e-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetStoryblok.vue?vue&type=template&id=38f7069c&
 var PictureSetStoryblokvue_type_template_id_38f7069c_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('picture',[_vm._l((_vm.srcset),function(source,index){return _c('source',{key:index,attrs:{"srcset":source.src,"media":("(min-width: " + (source.media) + "px)"),"type":source.type}})}),_c('img',{class:_vm.imgClass,style:(_vm.imgStyle),attrs:{"src":_vm.src + '?q=5',"alt":_vm.alt,"title":_vm.title,"loading":_vm.loading},on:{"load":_vm.loaded}})],2)}
 var PictureSetStoryblokvue_type_template_id_38f7069c_staticRenderFns = []
 
@@ -3882,12 +3882,12 @@ var PictureSetStoryblok_component = normalizeComponent(
 )
 
 /* harmony default export */ var PictureSetStoryblok = (PictureSetStoryblok_component.exports);
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"04e7651c-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetSanity.vue?vue&type=template&id=52c4c1b6&
-var PictureSetSanityvue_type_template_id_52c4c1b6_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('picture',[_vm._l((_vm.srcset),function(source,index){return _c('source',{key:index,attrs:{"srcset":source.src,"media":("(min-width: " + (source.media) + "px)"),"type":source.type}})}),_c('img',{class:_vm.imgClass,style:(_vm.imgStyle),attrs:{"src":_vm.src + '?q=5',"alt":_vm.alt,"title":_vm.title,"loading":_vm.loading},on:{"load":_vm.loaded}})],2)}
-var PictureSetSanityvue_type_template_id_52c4c1b6_staticRenderFns = []
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"2a9b5f7e-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetSanity.vue?vue&type=template&id=2320da80&
+var PictureSetSanityvue_type_template_id_2320da80_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('picture',[_vm._l((_vm.srcset),function(source,index){return _c('source',{key:index,attrs:{"srcset":source.src,"media":("(min-width: " + (source.media) + "px)"),"type":source.type}})}),_c('img',{class:_vm.imgClass,style:(_vm.imgStyle),attrs:{"src":_vm.src + '?q=5',"alt":_vm.alt,"title":_vm.title,"loading":_vm.loading},on:{"load":_vm.loaded}})],2)}
+var PictureSetSanityvue_type_template_id_2320da80_staticRenderFns = []
 
 
-// CONCATENATED MODULE: ./src/PictureSetSanity.vue?vue&type=template&id=52c4c1b6&
+// CONCATENATED MODULE: ./src/PictureSetSanity.vue?vue&type=template&id=2320da80&
 
 // CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js??ref--12-0!./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/PictureSetSanity.vue?vue&type=script&lang=js&
 
@@ -3963,14 +3963,16 @@ var PictureSetSanityvue_type_template_id_52c4c1b6_staticRenderFns = []
     },
     quality: {
       type: Object | Number,
-      default: {
-        webp: 75,
-        default: 80
+      default: function _default() {
+        return {
+          webp: 75,
+          default: 80
+        };
       }
     },
     imgStyle: {
       type: Object,
-      default: function _default(value) {}
+      default: function _default() {}
     },
     imgClass: {
       type: String,
@@ -4069,8 +4071,8 @@ var PictureSetSanityvue_type_template_id_52c4c1b6_staticRenderFns = []
 
 var PictureSetSanity_component = normalizeComponent(
   src_PictureSetSanityvue_type_script_lang_js_,
-  PictureSetSanityvue_type_template_id_52c4c1b6_render,
-  PictureSetSanityvue_type_template_id_52c4c1b6_staticRenderFns,
+  PictureSetSanityvue_type_template_id_2320da80_render,
+  PictureSetSanityvue_type_template_id_2320da80_staticRenderFns,
   false,
   null,
   null,

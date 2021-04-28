@@ -49,7 +49,7 @@ export default {
     },
     quality: {
       type: Object | Number,
-      default: () => { webp: 75, default: 80 }
+      default: () => ({ webp: 75, default: 80 })
     },
     imgStyle: {
       type: Object,
