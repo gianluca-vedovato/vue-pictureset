@@ -79,7 +79,7 @@ export default {
                     return `${attr}=${item.attr[attr]}`
                   })
                   .join('&')
-                return `${this.src}?${attrs}&fm=${ext}&q=${quality.default} ${i + 1}x`
+                return `${this.src}?${attrs}&fm=${ext}&q=${this.quality.default} ${i + 1}x`
               })
                 .join(', ')
               const densityWebp = Array.from(Array(2).keys()).map((i) => {
@@ -89,7 +89,7 @@ export default {
                     return `${attr}=${item.attr[attr]}`
                   })
                   .join('&')
-                return `${this.src}?${attrs}&fm=webp&q=${quality.webp} ${i + 1}x`
+                return `${this.src}?${attrs}&fm=webp&q=${this.quality.webp} ${i + 1}x`
               })
                 .join(', ')
               return [
