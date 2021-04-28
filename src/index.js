@@ -4,8 +4,9 @@ import PictureSetContentful from "./PictureSetContentful.vue"
 const PictureSetInstall = {
  install(Vue, options = { imagesApi: 'contentful' }) {
   const imagesApi = {
-    contentful: PictureSetContentful
-    // storyblok: PictureSetStoryblok
+    contentful: PictureSetContentful,
+    storyblok: PictureSetStoryblok,
+    
   }
   Vue.component("picture-set", imagesApi[options.imagesApi])
  }
