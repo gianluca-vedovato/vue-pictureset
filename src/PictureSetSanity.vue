@@ -115,11 +115,11 @@ export default {
                 ? this.size * this.mediaQueries[i - 1]
                 : this.size * media
               const densityJpg = Array.from(Array(2).keys()).map((i) => {
-                return `${this.src}?w=${w}&fit=${this.fit}&fm=${ext}&q=${this.quality.default} ${i + 1}x`
+                return `${this.src}?w=${parseInt(w)}&fit=${this.fit}&fm=${ext}&q=${this.quality.default} ${i + 1}x`
               })
                 .join(', ')
               const densityWebp = Array.from(Array(2).keys()).map((i) => {
-                return `${this.src}?w=${w}&fit=${this.fit}&fm=webp&q=${this.quality.webp} ${i + 1}x`
+                return `${this.src}?w=${parseInt(w)}&fit=${this.fit}&fm=webp&q=${this.quality.webp} ${i + 1}x`
               })
                 .join(', ')
               return [
