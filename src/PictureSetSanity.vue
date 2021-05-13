@@ -45,7 +45,7 @@ export default {
     },
     mediaQueries: {
       type: Array,
-      default: () => [1980, 1536, 1280, 1024, 768, 640]
+      default: () => [1980, 1536, 1280, 1024, 768, 640, 0]
     },
     quality: {
       type: Object | Number,
